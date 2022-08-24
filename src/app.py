@@ -1,16 +1,23 @@
+import click
 from flask import (
     Flask,
 )
+from flask_restx import Api
+
+from api.v1.auth import auth_api
+from api.v1.role import role_api
 from settings import settings
-from api import auth, role
 from db.config import (
     db,
     migrate,
 )
 from jwt_config import jwt
+from service.account import AccountService
+from service.exceptions import UserAlreadyExists
+
 app = Flask(__name__)
-app.register_blueprint(auth.auth_api)
-app.register_blueprint(role.role_api)
+
+api = Api(app, version='0.1', title='Auth service')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = settings.db.dsn
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -23,4 +30,18 @@ jwt.init_app(app)
 db.init_app(app)
 migrate.init_app(app, db)
 app.app_context().push()
+api.add_namespace(auth_api)
+api.add_namespace(role_api)
 
+
+@app.cli.command('create-super-user')
+@click.argument('name')
+@click.argument('password')
+@click.argument('email')
+def create_super_user(name, password, email):
+    with app.app_context():
+        account_service = AccountService(db)
+        try:
+            account_service.register(name, password, email, True)
+        except UserAlreadyExists:
+            pass

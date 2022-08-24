@@ -53,8 +53,13 @@ class AccountService:
         with db_session(self.db) as session:
             session.add(user_session)
 
-    def get_user_sessions(self, user_id: str):
-        return UserSession.query.filter_by(user_id=user_id)
+    def get_user_sessions(self,
+                          user_id: str,
+                          page_size=10,
+                          page_number=0):
+        return UserSession.query.filter_by(user_id=user_id).paginate(
+            int(page_number), int(page_size), error_out=False
+        )
 
     def edit_user(self, user_id: str, login: str = "", email: str = "", password: str = ""):
         user = User.query.filter_by(id=user_id).first()

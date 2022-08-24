@@ -16,6 +16,10 @@ docker-compose up
 1. docker-compose down
 2. docker image prune --all
 
+##### Swagger
+
+http://localhost
+
 ### Ссылка на репозиторий
 
 https://github.com/efgraph/Auth_sprint_1
