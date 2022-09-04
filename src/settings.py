@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta
 
 from dotenv import load_dotenv
@@ -19,11 +20,11 @@ def build_dsn(
 
 class DatabaseSettings(BaseSettings):
     protocol: str = 'postgresql'
-    user: str = 'postgres'
-    password: str = '123qwe'
-    host: str = 'db'
-    port: int = 5432
-    name: str = 'auth_database'
+    user: str = os.environ['POSTGRES_USER']
+    password: str = os.environ['POSTGRES_PASSWORD']
+    host: str = os.environ['POSTGRES_HOST']
+    port: int = os.environ['POSTGRES_PORT']
+    name: str = os.environ['POSTGRES_DB']
 
     @property
     def dsn(self) -> str:
@@ -38,8 +39,8 @@ class DatabaseSettings(BaseSettings):
 
 
 class RedisSettings(BaseSettings):
-    host: str = 'storage'
-    port: int = 6379
+    host: str = os.environ['STORAGE_HOST']
+    port: int = os.environ['STORAGE_PORT']
 
 
 class JWTSettings(BaseSettings):
@@ -55,11 +56,19 @@ class WSGISettings(BaseSettings):
     workers: int = 4
 
 
+class GoogleAuthSettings(BaseSettings):
+    name: str = 'google'
+    server_metadata_url: str = 'https://accounts.google.com/.well-known/openid-configuration'
+    client_id: str = os.environ['CLIENT_ID']
+    client_secret: str = os.environ['CLIENT_SECRET']
+
+
 class Settings(BaseSettings):
     db: DatabaseSettings = DatabaseSettings()
     redis: RedisSettings = RedisSettings()
     jwt: JWTSettings = JWTSettings()
     wsgi: WSGISettings = WSGISettings()
+    oauth = GoogleAuthSettings()
 
 
 settings = Settings()

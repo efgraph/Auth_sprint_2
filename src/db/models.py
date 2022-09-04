@@ -1,3 +1,4 @@
+import enum
 import uuid
 
 from sqlalchemy import (
@@ -7,15 +8,15 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     String,
-    func,
+    func, Enum,
 )
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import (
-    backref,
-    relationship,
-)
 
 from db.config import db
+
+
+class OAuthName(enum.Enum):
+    google = 'google'
 
 
 class TimestampMixin:
@@ -58,7 +59,14 @@ class UserSession(db.Model):
 
 class Password(db.Model):
     __tablename__ = 'passwords'
-
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     user_id = Column('user_id', UUID(as_uuid=True), ForeignKey('users.id'))
     password = Column(String(512), nullable=False)
+
+
+class OAuthAccount(db.Model):
+    __tablename__ = 'oauth_account'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    user_id = Column('user_id', UUID(as_uuid=True), ForeignKey('users.id'))
+    oauth_id = Column(String(255), nullable=False, unique=True)
+    oauth_provider = Column(Enum(OAuthName), nullable=False)

@@ -7,6 +7,10 @@
 
 При запуске создается суперюзер admin/admin.
 
+### Добавлена авторизация OAuth через Google
+
+CLIENT_SECRET оставил, т.к. проект тестовый.
+
 ##### Запуск проекта 
 
 docker-compose up
@@ -22,4 +26,4 @@ http://localhost
 
 ### Ссылка на репозиторий
 
-https://github.com/efgraph/Auth_sprint_1
+https://github.com/efgraph/Auth_sprint_2

@@ -3,6 +3,7 @@ from operator import itemgetter
 
 from flask import (
     request,
+    url_for
 )
 
 from flask_jwt_extended import (
@@ -17,16 +18,19 @@ from flask_restx import Namespace, Resource
 
 from api.v1.swagger.models import login_model, common_model, login_history_model, login_session_model
 from api.v1.swagger.parsers import register_parser, login_parser, logout_parser, login_history_parser, edit_user_parser, \
-    base_parser
+    base_parser, oauth_login_parser
 from db.config import db, token_storage
-from db.models import User, UserSession
+from db.models import User, UserSession, OAuthName
+from oauth import oauth
 from service.account import AccountService
 from service.exceptions import UserAlreadyExists, UserDoesntExists, WrongPassword, EditUserException
+from service.oauth_provider import OAuthProviderService
 from settings import settings
 from util.util import user_session_to_dict
 
 auth_api = Namespace('v1/auth', description='Role requests')
 account_service = AccountService(db)
+oauth_service = OAuthProviderService(db)
 
 auth_api.models[login_model.name] = login_model
 auth_api.models[common_model.name] = common_model
@@ -126,6 +130,29 @@ class RefreshToken(Resource):
         refresh_token_jti = get_jwt()['jti']
         token_storage.set_value(refresh_token_jti, '', time_to_leave=settings.jwt.refresh_token_expire_time)
         return {'access_token': access_token, 'refresh_token': refresh_token}, HTTPStatus.OK
+
+
+@auth_api.route('/redirect-google')
+class GoogleAuthorize(Resource):
+    @auth_api.marshal_with(login_model, skip_none=True)
+    def get(self):
+        args = oauth_login_parser.parse_args()
+        user_info = oauth.google.authorize_access_token()['userinfo']
+        user = None
+        try:
+            user = oauth_service.login(user_info['sub'], OAuthName.google.value)
+        except UserDoesntExists:
+            oauth_service.register_user(user_info['sub'], OAuthName.google.value, user_info['email'])
+            user = oauth_service.login(user_info['sub'], OAuthName.google.value)
+        tokens = _authorize_user(user, args['User-Agent'])
+        return tokens, HTTPStatus.OK
+
+
+@auth_api.route('/login-google')
+class GoogleLogin(Resource):
+    def get(self):
+        redirect_uri = url_for('v1/auth_google_authorize', _external=True)
+        return oauth.google.authorize_redirect(redirect_uri)
 
 
 def _authorize_user(user: User, user_agent: str) -> dict:

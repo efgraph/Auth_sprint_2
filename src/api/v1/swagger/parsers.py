@@ -43,3 +43,6 @@ role_edit_parser.add_argument('new_description', type=str, required=False, locat
 
 role_delete_parser = base_parser.copy()
 role_delete_parser.add_argument('name', type=str, required=True, location='args')
+
+oauth_login_parser = reqparse.RequestParser()
+oauth_login_parser.add_argument('User-Agent', location='headers')
