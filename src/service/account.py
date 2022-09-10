@@ -33,7 +33,7 @@ class AccountService:
 
     def register(self, login: str, password: str, email: str, is_superuser: bool = False):
         hash = self._generate_hex(password)
-        user = User(
+        user = User.create(
             login=login,
             email=email,
             is_superuser=is_superuser,

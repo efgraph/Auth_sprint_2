@@ -20,7 +20,8 @@ from api.v1.swagger.models import login_model, common_model, login_history_model
 from api.v1.swagger.parsers import register_parser, login_parser, logout_parser, login_history_parser, edit_user_parser, \
     base_parser, oauth_login_parser
 from db.config import db, token_storage
-from db.models import User, UserSession, OAuthName
+from db.models import User, OAuthName
+from limiter import limiter
 from oauth import oauth
 from service.account import AccountService
 from service.exceptions import UserAlreadyExists, UserDoesntExists, WrongPassword, EditUserException
@@ -40,6 +41,7 @@ auth_api.models[login_session_model.name] = login_session_model
 
 @auth_api.route('/register')
 class Register(Resource):
+    @limiter.limit('60 per minute')
     @auth_api.expect(register_parser)
     @auth_api.marshal_with(common_model)
     def post(self):
@@ -53,6 +55,7 @@ class Register(Resource):
 
 @auth_api.route('/login')
 class Login(Resource):
+    @limiter.limit('60 per minute')
     @auth_api.expect(login_parser)
     @auth_api.marshal_with(login_model, skip_none=True)
     def post(self):
@@ -69,6 +72,7 @@ class Login(Resource):
 
 @auth_api.route('/logout')
 class Logout(Resource):
+    @limiter.limit('60 per minute')
     @auth_api.expect(logout_parser)
     @auth_api.marshal_with(common_model, skip_none=True)
     def get(self):
@@ -81,6 +85,7 @@ class Logout(Resource):
 
 @auth_api.route('/login-history')
 class LoginHistory(Resource):
+    @limiter.limit('60 per minute')
     @jwt_required()
     @auth_api.expect(login_history_parser)
     @auth_api.marshal_with(login_history_model, skip_none=True)
@@ -103,6 +108,7 @@ class LoginHistory(Resource):
 
 @auth_api.route('/edit-user')
 class EditUser(Resource):
+    @limiter.limit('60 per minute')
     @jwt_required()
     @auth_api.expect(edit_user_parser)
     @auth_api.marshal_with(common_model, skip_none=True)
@@ -120,6 +126,7 @@ class EditUser(Resource):
 
 @auth_api.route('/refresh-token')
 class RefreshToken(Resource):
+    @limiter.limit('60 per minute')
     @jwt_required(refresh=True)
     @auth_api.expect(base_parser)
     @auth_api.marshal_with(login_model, skip_none=True)
@@ -134,11 +141,11 @@ class RefreshToken(Resource):
 
 @auth_api.route('/redirect-google')
 class GoogleAuthorize(Resource):
+    @limiter.limit('60 per minute')
     @auth_api.marshal_with(login_model, skip_none=True)
     def get(self):
         args = oauth_login_parser.parse_args()
         user_info = oauth.google.authorize_access_token()['userinfo']
-        user = None
         try:
             user = oauth_service.login(user_info['sub'], OAuthName.google.value)
         except UserDoesntExists:
@@ -150,6 +157,7 @@ class GoogleAuthorize(Resource):
 
 @auth_api.route('/login-google')
 class GoogleLogin(Resource):
+    @limiter.limit('60 per minute')
     def get(self):
         redirect_uri = url_for('v1/auth_google_authorize', _external=True)
         return oauth.google.authorize_redirect(redirect_uri)

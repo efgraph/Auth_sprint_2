@@ -63,12 +63,19 @@ class GoogleAuthSettings(BaseSettings):
     client_secret: str = os.environ['CLIENT_SECRET']
 
 
+class JaegerSettings(BaseSettings):
+    host: str = os.environ['JAEGER_HOST']
+    port: int = 6831
+    enable_tracing: bool = True
+
+
 class Settings(BaseSettings):
     db: DatabaseSettings = DatabaseSettings()
     redis: RedisSettings = RedisSettings()
     jwt: JWTSettings = JWTSettings()
     wsgi: WSGISettings = WSGISettings()
     oauth = GoogleAuthSettings()
+    jaeger: JaegerSettings = JaegerSettings()
 
 
 settings = Settings()

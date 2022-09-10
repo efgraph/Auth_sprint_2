@@ -15,6 +15,7 @@ from db.config import (
 from jwt_config import jwt
 from service.account import AccountService
 from service.exceptions import UserAlreadyExists
+from limiter import limiter
 
 app = Flask(__name__)
 
@@ -31,10 +32,18 @@ oauth.init_app(app)
 jwt.init_app(app)
 db.init_app(app)
 migrate.init_app(app, db)
+limiter.init_app(app)
 app.app_context().push()
 api.add_namespace(auth_api)
 api.add_namespace(role_api)
 app.secret_key = 'super secret key'
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
+from tracer import configure_tracer
+
+if settings.jaeger.enable_tracing:
+    configure_tracer()
+    FlaskInstrumentor().instrument_app(app)
+
 
 @app.cli.command('create-super-user')
 @click.argument('name')

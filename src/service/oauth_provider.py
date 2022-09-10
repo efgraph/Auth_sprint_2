@@ -17,7 +17,7 @@ class OAuthProviderService:
         return User.query.filter_by(id=oauth_account.user_id).first()
 
     def register_user(self, oauth_id: str, oauth_provider: str, email: str):
-        user = User(login=email, email=email)
+        user = User.create(login=email, email=email)
         try:
             with db_session(self.db) as session:
                 session.add(user)

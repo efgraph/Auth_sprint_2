@@ -13,6 +13,7 @@ from api.v1.swagger.models import common_model, role_model
 from api.v1.swagger.parsers import base_parser, role_edit_parser, role_create_parser, role_delete_parser, \
     user_role_get_parser, user_role_edit_parser
 from db.config import db
+from limiter import limiter
 from permissions import role_required
 from service.exceptions import RoleAlreadyExists, RoleDoesntExists, RelationDoesntExists
 from service.roles import RoleService
@@ -26,6 +27,7 @@ role_api.models[common_model.name] = common_model
 
 @role_api.route('')
 class Role(Resource):
+    @limiter.limit('60 per minute')
     @jwt_required()
     @role_required('admin')
     @role_api.expect(base_parser)
@@ -34,6 +36,7 @@ class Role(Resource):
         roles = [r.name for r in role_service.get_all_roles()]
         return {'roles': str(roles)}, HTTPStatus.OK
 
+    @limiter.limit('60 per minute')
     @jwt_required()
     @role_required('admin')
     @role_api.expect(role_edit_parser)
@@ -46,6 +49,7 @@ class Role(Resource):
             return {'msg': 'Role already exists'}, HTTPStatus.CONFLICT
         return {'msg': 'Role edited'}, HTTPStatus.OK
 
+    @limiter.limit('60 per minute')
     @jwt_required()
     @role_required('admin')
     @role_api.expect(role_create_parser)
@@ -60,6 +64,7 @@ class Role(Resource):
             return {'msg': 'Role already exists'}, HTTPStatus.CONFLICT
         return {'msg': 'Role created'}, HTTPStatus.OK
 
+    @limiter.limit('60 per minute')
     @jwt_required()
     @role_required('admin')
     @role_api.expect(role_delete_parser)
@@ -75,6 +80,7 @@ class Role(Resource):
 @role_api.route('/user')
 class UserRole(Resource):
 
+    @limiter.limit('60 per minute')
     @jwt_required()
     @role_required('admin')
     @role_api.expect(user_role_get_parser)
@@ -84,6 +90,7 @@ class UserRole(Resource):
         roles = role_service.get_user_roles(login=name)
         return {'roles': str([role.name for role in roles])}, HTTPStatus.OK
 
+    @limiter.limit('60 per minute')
     @jwt_required()
     @role_required('admin')
     @role_api.expect(user_role_edit_parser)
@@ -95,6 +102,7 @@ class UserRole(Resource):
             return {'msg': 'Role not found'}, HTTPStatus.NOT_FOUND
         return {'msg': 'Role set'}, HTTPStatus.OK
 
+    @limiter.limit('60 per minute')
     @jwt_required()
     @role_required('admin')
     @role_api.expect(user_role_edit_parser)

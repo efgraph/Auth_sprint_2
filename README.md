@@ -24,6 +24,10 @@ docker-compose up
 
 http://localhost
 
+##### Jaeger
+
+http://localhost:16686
+
 ### Ссылка на репозиторий
 
 https://github.com/efgraph/Auth_sprint_2
